@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://tiberiuungurianu.github.io/romanian-orthodox-calendar/sitemap.xml

@@ -1,10 +1,10 @@
 # Romanian Orthodox Calendar
 
-I got tired of manually adding Orthodox holidays to every calendar I use, so I built this.
+A personal **pet project**: I got tired of manually adding Orthodox holidays to every calendar I use, so I built this for myself. If you’re mostly in tech and want something similar — an Orthodox calendar as a subscribe-once iCalendar feed — it might be useful for you too.
 
-This project scrapes the Orthodox calendar from CrestinOrtodox.ro, generates a proper `.ics` file and publishes it through GitHub Pages so it can be subscribed to from Apple Calendar, Google Calendar, Outlook or pretty much anything that supports iCalendar feeds.
+This project scrapes the Orthodox calendar from CrestinOrtodox.ro, generates a proper `.ics` file, and publishes it so you can subscribe from Apple Calendar, Google Calendar, Outlook, or anything that supports iCalendar feeds.
 
-The calendar updates itself every month, so you subscribe once and forget about it.
+The calendar updates itself every month — subscribe once and forget about it.
 
 ---
 
@@ -35,6 +35,102 @@ python3 -m http.server 8080
 ```
 
 Open http://localhost:8080 (ES modules require a local server, not `file://`).
+
+### Language (RO / EN)
+
+On first visit, the UI language follows the **browser / device language list**: if any preferred locale is Romanian (`ro`, `ro-RO`, `ro-MD`, …), the site opens in **Romanian**; otherwise **English**. Calendar event titles stay in Romanian (source data). Tapping **RO** or **EN** saves a choice in `localStorage` (`roc-calendar-lang`) and overrides auto-detection on later visits.
+
+---
+
+## Traffic & analytics (maximum data)
+
+The site can send **rich usage data** to tools you control. Combine all three for the fullest picture.
+
+| Tool | What you get | Who sees it |
+|------|----------------|-------------|
+| **Google Analytics 4** | Visits, geography, devices, traffic sources, custom events, funnels | You + Google (per their terms) |
+| **Microsoft Clarity** | Heatmaps, scroll maps, **session recordings**, rage clicks | You + Microsoft (free) |
+| **Plausible** | Simple pageviews + events, lightweight dashboard | You + Plausible |
+| **Netlify Analytics** | Server page hits (incl. `/calendar.ics` downloads) | Only you (Netlify dashboard) |
+
+### 1. Enable in `index.html`
+
+```html
+<html
+  lang="ro"
+  data-ga-measurement-id="G-XXXXXXXXXX"
+  data-clarity-id="your-clarity-project-id"
+  data-plausible-domain="your-site.netlify.app"
+>
+```
+
+Leave a field empty to skip that provider. **Nothing runs on `localhost`.**
+
+### 2. Google Analytics 4 (most data)
+
+1. [analytics.google.com](https://analytics.google.com) → create property → **Web** stream.
+2. Copy **Measurement ID** (`G-…`) into `data-ga-measurement-id`.
+3. In GA4: **Admin → Data collection** — turn on enhanced measurement (scrolls, outbound clicks, etc.).
+4. View **Reports**, **Explore**, **Advertising** (if linked).
+
+### 3. Microsoft Clarity (behavior you can watch)
+
+1. [clarity.microsoft.com](https://clarity.microsoft.com) → add project → copy **Project ID**.
+2. Set `data-clarity-id="…"`.
+3. Watch real user sessions, clicks, and dead clicks.
+
+### 4. Plausible (optional extra)
+
+1. [plausible.io](https://plausible.io) → add site domain → `data-plausible-domain="…"`.
+
+### 5. Netlify (feed + page hits, no code)
+
+Netlify dashboard → **Analytics** on your site (tracks all HTTP requests).
+
+### Events tracked automatically (production)
+
+| Event | When |
+|--------|------|
+| `site_context` | First load (screen size, referrer, UTM params) |
+| `calendar_loaded` | ICS parsed successfully |
+| `calendar_load_error` | Feed failed |
+| `view_month` | Month shown (matrix, arrows, today) |
+| `select_day` | Day clicked on grid |
+| `copy_feed_link` / `copy_webcal_link` | Subscribe URL copied |
+| `subscribe_apple_calendar` / `google` / `outlook` | Platform button |
+| `share_feed_link` | Native share |
+| `download_ics` | `.ics` link clicked |
+| `language_change` | RO ↔ EN |
+| `outbound_click` | External link (e.g. CrestinOrtodox.ro) |
+| `session_end` | Time on site (seconds) when tab hidden |
+| `header_subscribe_click` | Header CTA |
+| `subscribe_help_open` | Help accordion opened |
+
+Each event includes page URL, language, viewport, referrer, and UTM tags when present.
+
+### Cookie banner (built in)
+
+If you set any analytics ID in `index.html`, visitors in production see a **cookie bar** at the bottom:
+
+- **Accept toate** — loads GA4, Clarity, Plausible and starts tracking.
+- **Doar esențiale** — calendar works normally; **no** analytics scripts.
+- **Setări cookie** (footer) — reopen the bar and change choice.
+
+Choice is stored in `localStorage` (`roc-cookie-consent`). On `localhost` the banner is hidden (dev mode).
+
+A **privacy policy** is at [`/privacy.html`](privacy.html) (RO/EN). It explains that analytics are only for seeing how many people use the calendar and roughly where they are from — linked from the cookie banner and footer.
+
+#### Quick setup checklist
+
+1. Add analytics IDs to `<html>` (GA4, Clarity, etc.).
+2. Deploy to Netlify.
+3. Visit the live site — banner appears on first visit.
+4. Click **Accept** yourself once to verify GA/Clarity receive data.
+5. Review [`privacy.html`](privacy.html) and update the “Last updated” date if you change what you collect.
+
+#### Without analytics IDs
+
+If all `data-ga-measurement-id`, `data-clarity-id`, and `data-plausible-domain` are **empty**, no banner appears and nothing is tracked.
 
 ---
 

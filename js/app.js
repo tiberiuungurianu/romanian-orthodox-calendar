@@ -1,29 +1,29 @@
 import { parseIcs, indexByDate } from "./ical-parse.js";
+import { KIND_PRIORITY, dayTone, eventKind } from "./event-kind.js";
 import {
-  KIND_PRIORITY,
-  badgeLabel,
-  dayTone,
-  eventKind,
-} from "./event-kind.js";
+  getBadgeLabel,
+  getLang,
+  getMonthName,
+  getWeekdays,
+  initI18n,
+  onLanguageChange,
+  t,
+} from "./i18n.js";
+import { refreshSubscribeLinks, setupSubscribe } from "./subscribe.js";
+import {
+  trackEvent,
+  trackSelectDay,
+  trackViewMonth,
+} from "./analytics.js";
+import { initConsent } from "./consent.js";
+import { initTheme } from "./theme.js";
+import { updateSeo } from "./seo.js";
 
 const ICS_URL = "/calendar.ics";
 
-const MONTH_NAMES = [
-  "Ianuarie",
-  "Februarie",
-  "Martie",
-  "Aprilie",
-  "Mai",
-  "Iunie",
-  "Iulie",
-  "August",
-  "Septembrie",
-  "Octombrie",
-  "Noiembrie",
-  "Decembrie",
-];
-
-const WEEKDAYS = ["Lu", "Ma", "Mi", "Jo", "Vi", "Sâ", "Du"];
+/** Always render 6 week rows so the calendar box never changes height. */
+const CALENDAR_WEEK_ROWS = 6;
+const CALENDAR_DAY_SLOTS = CALENDAR_WEEK_ROWS * 7;
 
 /** @type {Map<string, import("./ical-parse.js").CalendarEvent[]>} */
 let eventsByDate = new Map();
@@ -32,7 +32,19 @@ let viewYear;
 let viewMonth;
 let selectedIso = null;
 
+/** @type {{ year: number, month: number }[]} */
+let availableMonths = [];
+
+/** @type {number | null} */
+let loadedEventCount = null;
+
 const $ = (sel) => document.querySelector(sel);
+
+function updateMetaCount() {
+  const el = $("#meta-count");
+  if (!el || loadedEventCount === null) return;
+  el.textContent = t("meta.events", { count: loadedEventCount });
+}
 
 function todayIso() {
   const d = new Date();
@@ -42,18 +54,10 @@ function todayIso() {
   return `${y}-${m}-${day}`;
 }
 
-function feedUrl() {
-  return new URL(ICS_URL, window.location.origin).href;
-}
-
-function webcalUrl() {
-  return feedUrl().replace(/^https?:/, "webcal:");
-}
-
 function renderEventItem(ev) {
   const kind = eventKind(ev.summary);
   return `<li class="event-item event-item--${kind}">
-    <span class="event-badge">${badgeLabel(kind)}</span>
+    <span class="event-badge">${getBadgeLabel(kind)}</span>
     <span class="event-title">${escapeHtml(ev.summary)}</span>
   </li>`;
 }
@@ -85,7 +89,10 @@ function renderToday() {
   const empty = $("#today-empty");
 
   const [y, m, d] = iso.split("-").map(Number);
-  title.textContent = `Astăzi — ${d} ${MONTH_NAMES[m - 1]} ${y}`;
+  title.textContent = `${d} ${getMonthName(m - 1)} ${y}`;
+  title.className = "section-title";
+  const todayTone = dayTone(events);
+  if (todayTone) title.classList.add(`day-title--${todayTone}`);
 
   if (events.length === 0) {
     list.innerHTML = "";
@@ -100,27 +107,37 @@ function renderSelectedDay() {
   const panel = $("#day-panel");
   const title = $("#day-title");
   const list = $("#day-events");
+  const empty = $("#day-panel-empty");
+  if (!panel || !title || !list || !empty) return;
 
   if (!selectedIso) {
-    panel.hidden = true;
+    panel.classList.add("day-detail-slot--idle");
+    title.textContent = "—";
+    title.className = "section-title";
+    empty.hidden = false;
+    list.hidden = true;
+    list.innerHTML = "";
     return;
   }
 
   const events = eventsByDate.get(selectedIso) || [];
   const [y, m, d] = selectedIso.split("-").map(Number);
-  title.textContent = `${d} ${MONTH_NAMES[m - 1]} ${y}`;
-  title.className = "day-title";
+  title.textContent = `${d} ${getMonthName(m - 1)} ${y}`;
+  title.className = "section-title";
   const tone = dayTone(events);
   if (tone) title.classList.add(`day-title--${tone}`);
+
+  panel.classList.remove("day-detail-slot--idle");
+  empty.hidden = true;
+  list.hidden = false;
   list.innerHTML =
     events.length > 0
       ? events.map(renderEventItem).join("")
-      : '<li class="event-item event-item--empty">Nicio înregistrare pentru această zi.</li>';
-  panel.hidden = false;
+      : `<li class="event-item event-item--empty">${t("day.empty")}</li>`;
 }
 
 function renderMonthLabel() {
-  $("#month-label").textContent = `${MONTH_NAMES[viewMonth]} ${viewYear}`;
+  $("#month-label").textContent = `${getMonthName(viewMonth)} ${viewYear}`;
 }
 
 function daysInMonth(year, month) {
@@ -131,7 +148,7 @@ function renderGrid() {
   const grid = $("#calendar-grid");
   grid.innerHTML = "";
 
-  WEEKDAYS.forEach((wd) => {
+  getWeekdays().forEach((wd) => {
     const el = document.createElement("div");
     el.className = "grid-weekday";
     el.textContent = wd;
@@ -165,49 +182,128 @@ function renderGrid() {
       events.some((e) => eventKind(e.summary) === k)
     );
     const dots = kindsOnDay
-      .map((k) => `<span class="dot dot--${k}" title="${badgeLabel(k)}"></span>`)
+      .map((k) => `<span class="dot dot--${k}" title="${getBadgeLabel(k)}"></span>`)
       .join("");
 
     cell.innerHTML = `<span class="day-num">${day}</span><span class="dots">${dots}</span>`;
-    cell.setAttribute("aria-label", `${day} ${MONTH_NAMES[viewMonth]} ${viewYear}, ${events.length} evenimente`);
-    cell.addEventListener("click", () => {
+    cell.setAttribute(
+      "aria-label",
+      t("cal.dayAria", {
+        day,
+        month: getMonthName(viewMonth),
+        year: viewYear,
+        count: events.length,
+      })
+    );
+    cell.addEventListener("click", (e) => {
+      e.preventDefault();
       selectedIso = iso;
+      trackSelectDay(iso, events.length);
       renderGrid();
       renderSelectedDay();
+      cell.blur();
     });
     grid.appendChild(cell);
   }
 
+  const trailingPads = CALENDAR_DAY_SLOTS - firstDow - totalDays;
+  for (let i = 0; i < trailingPads; i++) {
+    const pad = document.createElement("div");
+    pad.className = "grid-cell grid-cell--pad";
+    pad.setAttribute("aria-hidden", "true");
+    grid.appendChild(pad);
+  }
+
   renderMonthLabel();
+  renderMonthPicker();
+}
+
+function buildAvailableMonths() {
+  const keys = new Set();
+  for (const iso of eventsByDate.keys()) {
+    keys.add(iso.slice(0, 7));
+  }
+  availableMonths = [...keys]
+    .sort()
+    .map((ym) => {
+      const [year, month] = ym.split("-").map(Number);
+      return { year, month: month - 1 };
+    });
+}
+
+function currentViewIndex() {
+  return availableMonths.findIndex(
+    (m) => m.year === viewYear && m.month === viewMonth
+  );
+}
+
+/**
+ * @param {number} year
+ * @param {number} month
+ * @param {string} [source]
+ */
+function setViewMonth(year, month, source = "unknown") {
+  viewYear = year;
+  viewMonth = month;
+  if (selectedIso) {
+    const [sy, sm] = selectedIso.split("-").map(Number);
+    if (sy !== year || sm !== month + 1) {
+      selectedIso = null;
+      renderSelectedDay();
+    }
+  }
+  renderGrid();
+  trackViewMonth(year, month, source);
+}
+
+function renderMonthPicker() {
+  const matrix = $("#month-matrix");
+  if (!matrix) return;
+  matrix.innerHTML = "";
+
+  const today = todayIso();
+  const todayYm = today.slice(0, 7);
+
+  for (const { year, month } of availableMonths) {
+    const ym = `${year}-${String(month + 1).padStart(2, "0")}`;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "month-cell glass-inset";
+    if (year === viewYear && month === viewMonth) {
+      btn.classList.add("month-cell--active");
+      btn.setAttribute("aria-current", "true");
+    }
+    if (ym === todayYm) {
+      btn.classList.add("month-cell--current-month");
+    }
+
+    btn.innerHTML = `<span class="month-cell__name">${getMonthName(month)}</span><span class="month-cell__year">${year}</span>`;
+    btn.setAttribute("aria-label", `${getMonthName(month)} ${year}`);
+    btn.addEventListener("click", () => setViewMonth(year, month, "month_matrix"));
+    matrix.appendChild(btn);
+  }
 }
 
 function shiftMonth(delta) {
-  viewMonth += delta;
-  if (viewMonth > 11) {
-    viewMonth = 0;
-    viewYear += 1;
-  } else if (viewMonth < 0) {
-    viewMonth = 11;
-    viewYear -= 1;
-  }
-  renderGrid();
+  const idx = currentViewIndex();
+  if (idx === -1 || !availableMonths.length) return;
+  const next = availableMonths[idx + delta];
+  if (!next) return;
+  setViewMonth(next.year, next.month, delta < 0 ? "prev_month" : "next_month");
 }
 
 function clampViewToData() {
-  const dates = [...eventsByDate.keys()].sort();
-  if (!dates.length) return;
-  const min = dates[0];
-  const max = dates[dates.length - 1];
-  const cur = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-01`;
-  if (cur < min.slice(0, 7)) {
-    const [y, m] = min.split("-").map(Number);
-    viewYear = y;
-    viewMonth = m - 1;
-  }
-  if (cur > max.slice(0, 7)) {
-    const [y, m] = max.split("-").map(Number);
-    viewYear = y;
-    viewMonth = m - 1;
+  buildAvailableMonths();
+  if (!availableMonths.length) return;
+  const idx = currentViewIndex();
+  if (idx === -1) {
+    const [y, m] = todayIso().split("-").map(Number);
+    const todayIdx = availableMonths.findIndex(
+      (item) => item.year === y && item.month === m - 1
+    );
+    const pick = todayIdx >= 0 ? availableMonths[todayIdx] : availableMonths[0];
+    viewYear = pick.year;
+    viewMonth = pick.month;
   }
 }
 
@@ -215,7 +311,7 @@ async function loadCalendar() {
   setLoading(true);
   try {
     const res = await fetch(ICS_URL, { cache: "no-cache" });
-    if (!res.ok) throw new Error(`Nu s-a putut încărca calendarul (${res.status})`);
+    if (!res.ok) throw new Error(t("error.load", { status: res.status }));
     const text = await res.text();
     const events = parseIcs(text);
     eventsByDate = indexByDate(events);
@@ -223,56 +319,57 @@ async function loadCalendar() {
     const [y, m] = todayIso().split("-").map(Number);
     viewYear = y;
     viewMonth = m - 1;
-    selectedIso = todayIso();
+    selectedIso = null;
 
     clampViewToData();
     setLoading(false);
     renderToday();
     renderGrid();
     renderSelectedDay();
+    renderMonthPicker();
 
-    const count = events.length;
-    $("#meta-count").textContent = `${count} evenimente în următoarele 12 luni`;
+    loadedEventCount = events.length;
+    updateMetaCount();
+    trackEvent("calendar_loaded", {
+      event_count: loadedEventCount,
+      months_available: availableMonths.length,
+    });
+    trackViewMonth(viewYear, viewMonth, "initial");
   } catch (err) {
-    showError(err instanceof Error ? err.message : "Eroare necunoscută");
+    const message = err instanceof Error ? err.message : t("error.unknown");
+    trackEvent("calendar_load_error", { message });
+    showError(message);
   }
 }
 
-function setupSubscribe() {
-  const url = feedUrl();
-  $("#feed-url").textContent = url;
-  $("#feed-url").href = url;
-
-  $("#copy-feed").addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(url);
-      toast("Link copiat în clipboard");
-    } catch {
-      toast("Nu s-a putut copia — selectează linkul manual");
-    }
+function syncSeo() {
+  updateSeo({
+    title: t("meta.title"),
+    description: t("meta.description"),
+    keywords: t("meta.keywords"),
+    feedTitle: t("meta.feedTitle"),
+    lang: getLang(),
   });
-
-  $("#copy-webcal").addEventListener("click", async () => {
-    const w = webcalUrl();
-    try {
-      await navigator.clipboard.writeText(w);
-      toast("Link webcal copiat (ideal pentru Apple Calendar)");
-    } catch {
-      toast(w);
-    }
-  });
-
-  $("#open-apple").href = webcalUrl();
 }
 
-function toast(message) {
-  const el = $("#toast");
-  el.textContent = message;
-  el.hidden = false;
-  clearTimeout(toast._t);
-  toast._t = setTimeout(() => {
-    el.hidden = true;
-  }, 2800);
+function refreshUi() {
+  syncSeo();
+  applyStaticI18nAria();
+  refreshSubscribeLinks();
+  updateMetaCount();
+  renderToday();
+  renderGrid();
+  renderSelectedDay();
+  renderMonthPicker();
+}
+
+function applyStaticI18nAria() {
+  const prev = $("#prev-month");
+  const next = $("#next-month");
+  const grid = $("#calendar-grid");
+  if (prev) prev.setAttribute("aria-label", t("cal.prev"));
+  if (next) next.setAttribute("aria-label", t("cal.next"));
+  if (grid) grid.setAttribute("aria-label", t("cal.gridLabel"));
 }
 
 function setupNav() {
@@ -282,15 +379,21 @@ function setupNav() {
     const [y, m] = todayIso().split("-").map(Number);
     viewYear = y;
     viewMonth = m - 1;
-    selectedIso = todayIso();
-    renderGrid();
+    selectedIso = null;
+    trackEvent("go_today_click");
+    setViewMonth(y, m - 1, "today_button");
     renderToday();
     renderSelectedDay();
   });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  initI18n();
+  initTheme();
+  initConsent();
+  syncSeo();
   setupSubscribe();
   setupNav();
+  onLanguageChange(refreshUi);
   loadCalendar();
 });

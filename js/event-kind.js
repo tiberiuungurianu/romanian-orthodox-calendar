@@ -94,34 +94,3 @@ export function dayTone(events) {
   return null;
 }
 
-/**
- * @param {EventKind} kind
- */
-export function badgeLabel(kind) {
-  switch (kind) {
-    case "major":
-      return "Praznic mare";
-    case "feast":
-      return "Sărbătoare";
-    case "fasting":
-      return "Post / dezlegare";
-    default:
-      return "Sfânt";
-  }
-}
-
-/**
- * @param {EventKind} kind
- */
-export function legendHint(kind) {
-  switch (kind) {
-    case "major":
-      return "Paști, Crăciun, Rusalii, praznice împărătești";
-    case "feast":
-      return "Duminici de praznic, ajunuri, începuturi de post";
-    case "fasting":
-      return "Post, hărți, dezlegări";
-    default:
-      return "Sfinții și pomenirile zilei";
-  }
-}

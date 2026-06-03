@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>
+      (function () {
+        var root = document.documentElement;
+        try {
+          if (localStorage.getItem("roc-theme") === "dark") {
+            root.setAttribute("data-theme", "dark");
+          }
+        } catch (_) {}
+        var lang = "en";
+        try {
+          var saved = localStorage.getItem("roc-calendar-lang");
+          if (saved === "ro" || saved === "en") lang = saved;
+          else {
+            var list = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || "en"];
+            for (var i = 0; i < list.length; i++) {
+              var t = String(list[i]).toLowerCase().replace("_", "-");
+              if (t === "ro" || t.indexOf("ro-") === 0) {
+                lang = "ro";
+                break;
+              }
+            }
+          }
+        } catch (_) {}
+        root.lang = lang;
+      })();
+    </script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Politica de confidențialitate — Calendar Ortodox Românesc. Statistici anonime despre utilizare și țară."
+    />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="/privacy.html" />
+    <title>Confidențialitate — Calendar Ortodox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23a8d4e6' width='32' height='32' rx='8'/%3E%3Cpath stroke='%235a7a8a' stroke-width='1.5' d='M16 7v18M11 11h10M11 21h10'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <div class="ambient" aria-hidden="true">
+      <div class="orb orb--1"></div>
+      <div class="orb orb--2"></div>
+      <div class="orb orb--3"></div>
+    </div>
+
+    <div class="shell shell--narrow">
+      <header class="site-header glass">
+        <div class="brand">
+          <span class="brand-icon" aria-hidden="true">☦</span>
+          <div>
+            <h1 data-i18n="brand.title">Calendar Ortodox</h1>
+            <p class="brand-sub" data-i18n="privacy.eyebrow">Confidențialitate</p>
+          </div>
+        </div>
+        <div class="header-actions">
+          <div class="header-controls">
+            <button
+              type="button"
+              class="theme-toggle"
+              id="theme-toggle"
+              aria-pressed="false"
+              aria-label="Temă întunecată"
+            >
+              <span class="theme-toggle__icon theme-toggle__icon--light" aria-hidden="true">☀</span>
+              <span class="theme-toggle__icon theme-toggle__icon--dark" aria-hidden="true">☾</span>
+            </button>
+            <div class="lang-switch" role="group" data-i18n-aria="lang.label">
+              <button type="button" class="lang-btn" data-lang="ro" aria-pressed="false">RO</button>
+              <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+            </div>
+          </div>
+          <a class="btn btn--glass btn--header" href="/" data-i18n="privacy.backHome">Înapoi la calendar</a>
+        </div>
+      </header>
+
+      <main class="privacy-main">
+        <article class="privacy glass">
+          <h2 class="privacy__title" data-i18n="privacy.title">Politica de confidențialitate</h2>
+          <p class="privacy__updated" data-i18n="privacy.updated">Actualizat: 3 iunie 2026</p>
+          <p class="privacy__intro" data-i18n="privacy.intro">
+            Acest site este un calendar ortodox gratuit. Colectăm date de utilizare doar dacă accepți cookie-urile de analiză — ca să vedem câți oameni folosesc calendarul și din ce țări vin.
+          </p>
+
+          <section class="privacy__section">
+            <h3 data-i18n="privacy.who.title">Cine operează site-ul</h3>
+            <p data-i18n="privacy.who.text">
+              Acest site este un proiect personal open-source (pet project), fără conturi de utilizator.
+            </p>
+          </section>
+
+          <section class="privacy__section">
+            <h3 data-i18n="privacy.why.title">De ce colectăm date</h3>
+            <p data-i18n="privacy.why.text">
+              Vrem să știm dacă site-ul este util: câți vizitatori îl folosesc, ce pagini deschid și din ce țări provin (aproximativ). Nu folosim datele pentru reclame și nu le vindem.
+            </p>
+          </section>
+
+          <section class="privacy__section">
+            <h3 data-i18n="privacy.what.title">Ce date pot fi colectate (doar cu acceptul tău)</h3>
+            <ul class="privacy__list">
+              <li data-i18n="privacy.what.1">Pagini vizitate și acțiuni pe site (ex. lună selectată, zi, abonare la calendar)</li>
+              <li data-i18n="privacy.what.2">Țară sau regiune aproximativă, tip de dispozitiv și browser</li>
+              <li data-i18n="privacy.what.3">Limba interfeței (RO / EN)</li>
+              <li data-i18n="privacy.what.4">Nu cerem nume, email sau parolă — site-ul nu are înregistrare</li>
+            </ul>
+          </section>
+
+          <section class="privacy__section">
+            <h3 data-i18n="privacy.providers.title">Servicii folosite</h3>
+            <p data-i18n="privacy.providers.text">
+              Dacă accepți „Accept toate”, putem folosi Google Analytics 4, Microsoft Clarity și, opțional, Plausible. Aceste servicii procesează date conform politicilor lor; datele ajung în SUA sau UE în funcție de furnizor.
+            </p>
+          </section>
+
+          <section class="privacy__section">
+            <h3 data-i18n="privacy.cookies.title">Cookie-uri și stocare locală</h3>
+            <p data-i18n="privacy.cookies.analytics">
+              Cookie-uri de analiză: doar după accept explicit (bannerul de la baza paginii).
+            </p>
+            <p data-i18n="privacy.cookies.essential">
+              Fără analiză, păstrăm în browser doar preferința de limbă și alegerea ta privind cookie-urile (localStorage).
+            </p>
+          </section>
+
+          <section class="privacy__section">
+            <h3 data-i18n="privacy.retention.title">Cât timp păstrăm datele</h3>
+            <p data-i18n="privacy.retention.text">
+              Durata depinde de fiecare serviciu de analiză (de obicei câteva luni). Poți șterge cookie-urile din setările browserului oricând.
+            </p>
+          </section>
+
+          <section class="privacy__section">
+            <h3 data-i18n="privacy.rights.title">Ce poți face</h3>
+            <ul class="privacy__list">
+              <li data-i18n="privacy.rights.1">Refuză analiza — apasă „Doar esențiale” în banner</li>
+              <li data-i18n="privacy.rights.2">Schimbă alegerea — „Setări cookie” în subsol</li>
+              <li data-i18n="privacy.rights.3">Șterge date locale — șterge cookie-urile și localStorage pentru acest site</li>
+            </ul>
+          </section>
+
+          <section class="privacy__section">
+            <h3 data-i18n="privacy.contact.title">Contact</h3>
+            <p>
+              <span data-i18n="privacy.contact.before">Întrebări despre confidențialitate:</span>
+              <a
+                href="https://github.com/tiberiuungurianu/romanian-orthodox-calendar/issues"
+                target="_blank"
+                rel="noopener"
+                data-i18n="privacy.contact.link"
+                >deschide o discuție pe GitHub</a
+              ><span data-i18n="privacy.contact.after">.</span>
+            </p>
+          </section>
+        </article>
+      </main>
+
+      <footer class="site-footer">
+        <p>
+          <a href="/" data-i18n="privacy.backHome">Înapoi la calendar</a>
+          ·
+          <button type="button" class="footer-link" id="cookie-settings-link" data-i18n="consent.settings">
+            Setări cookie
+          </button>
+        </p>
+      </footer>
+    </div>
+
+    <div
+      id="cookie-banner"
+      class="cookie-banner glass"
+      role="dialog"
+      aria-labelledby="cookie-banner-title"
+      aria-describedby="cookie-banner-text"
+      hidden
+    >
+      <div class="cookie-banner__inner">
+        <h2 id="cookie-banner-title" class="cookie-banner__title" data-i18n="consent.title">Cookie-uri și statistici</h2>
+        <p id="cookie-banner-text" class="cookie-banner__text" data-i18n="consent.text">
+          Folosim cookie-uri și servicii de analiză pentru a înțelege cum este folosit site-ul.
+        </p>
+        <p class="cookie-banner__legal">
+          <a href="/privacy.html" data-i18n="consent.privacy">Politica de confidențialitate</a>
+        </p>
+        <div class="cookie-banner__actions">
+          <button type="button" class="btn btn--fill" id="cookie-accept" data-i18n="consent.accept">Accept toate</button>
+          <button type="button" class="btn btn--glass" id="cookie-reject" data-i18n="consent.reject">Doar esențiale</button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/js/privacy-page.js"></script>
+  </body>
+</html>

@@ -8,6 +8,22 @@
   [headers.values]
     Content-Type = "text/calendar; charset=utf-8"
     Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=3600, stale-while-revalidate=86400"
+
+[[headers]]
+  for = "/css/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/js/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=300, stale-while-revalidate=3600"
 
 [[headers]]
   for = "/*"
