@@ -4,6 +4,8 @@ A personal **pet project**: I got tired of manually adding Orthodox holidays to 
 
 The site reads `calendar.ics` (scraped from [CrestinOrtodox.ro](https://www.crestinortodox.ro/calendar-ortodox/)) and shows today’s entries, a month grid, and one-click subscribe links. The feed is rebuilt every month via GitHub Actions — subscribe once and forget about it.
 
+**Live site:** [cerulean-buttercream-9a34a2.netlify.app](https://cerulean-buttercream-9a34a2.netlify.app)
+
 ---
 
 ## What’s on the site
@@ -21,10 +23,11 @@ The site reads `calendar.ics` (scraped from [CrestinOrtodox.ro](https://www.cres
 
 ## Subscribe to the feed
 
-After the site is deployed, use the same origin as the website:
+**Site:** https://cerulean-buttercream-9a34a2.netlify.app  
+**Feed:**
 
 ```text
-https://<your-site>/calendar.ics
+https://cerulean-buttercream-9a34a2.netlify.app/calendar.ics
 ```
 
 **Apple Calendar** — File → New Calendar Subscription → paste URL → refresh weekly or monthly.
