@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ro">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Calendar ortodox românesc — sărbători, sfinți și posturi. Abonează-te la feedul iCalendar."
+    />
+    <title>Calendar Ortodox Românesc</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%231a2744' width='32' height='32' rx='6'/%3E%3Cpath stroke='%23c9a227' stroke-width='2' d='M16 6v20M10 10h12M10 22h12'/%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <div class="page-bg" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <div class="brand">
+        <span class="brand-cross" aria-hidden="true">☦</span>
+        <div>
+          <h1>Calendar Ortodox</h1>
+          <p class="brand-sub">Sfinți, sărbători și posturi — 12 luni rulante</p>
+        </div>
+      </div>
+      <p class="source">Date: <a href="https://www.crestinortodox.ro/calendar-ortodox/" target="_blank" rel="noopener">CrestinOrtodox.ro</a></p>
+    </header>
+
+    <main>
+      <section class="subscribe card" aria-labelledby="subscribe-heading">
+        <h2 id="subscribe-heading">Abonare calendar</h2>
+        <p>Adaugă feedul în Apple Calendar, Google Calendar sau Outlook — se actualizează lunar.</p>
+        <a class="feed-link" id="feed-url" href="/calendar.ics"></a>
+        <div class="subscribe-actions">
+          <button type="button" class="btn btn--primary" id="copy-feed">Copiază link .ics</button>
+          <button type="button" class="btn btn--ghost" id="copy-webcal">Copiază webcal</button>
+          <a class="btn btn--ghost" id="open-apple" href="#">Deschide în Apple Calendar</a>
+        </div>
+      </section>
+
+      <div id="loader" class="loader card">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Se încarcă calendarul…</p>
+      </div>
+
+      <div id="error-panel" class="error card" hidden>
+        <h2>Nu s-a putut încărca</h2>
+        <p id="error-message"></p>
+        <button type="button" class="btn btn--primary" onclick="location.reload()">Reîncearcă</button>
+      </div>
+
+      <div id="app" hidden>
+        <p class="meta" id="meta-count"></p>
+
+        <section class="today card" aria-labelledby="today-heading">
+          <h2 id="today-title" class="today-heading">Astăzi</h2>
+          <p id="today-empty" class="muted" hidden>Nicio înregistrare pentru ziua de azi în fereastra curentă.</p>
+          <ul class="event-list" id="today-events"></ul>
+        </section>
+
+        <section class="calendar card" aria-labelledby="month-label">
+          <div class="cal-toolbar">
+            <button type="button" class="btn-icon" id="prev-month" aria-label="Luna anterioară">‹</button>
+            <h2 id="month-label" class="month-label">—</h2>
+            <button type="button" class="btn-icon" id="next-month" aria-label="Luna următoare">›</button>
+            <button type="button" class="btn btn--small" id="go-today">Azi</button>
+          </div>
+          <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Calendar lunar"></div>
+          <ul class="legend">
+            <li><span class="dot dot--feast"></span> Sărbătoare</li>
+            <li><span class="dot dot--saint"></span> Sfânt</li>
+            <li><span class="dot dot--fasting"></span> Post / dezlegare</li>
+          </ul>
+        </section>
+
+        <section class="day-detail card" id="day-panel" hidden aria-labelledby="day-title">
+          <h2 id="day-title" class="day-title">—</h2>
+          <ul class="event-list" id="day-events"></ul>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <p>
+        Proiect open-source —
+        <a href="https://github.com/tiberiuungurianu/romanian-orthodox-calendar" target="_blank" rel="noopener">GitHub</a>
+      </p>
+    </footer>
+
+    <div id="toast" class="toast" role="status" hidden></div>
+
+    <script type="module" src="/js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,17 @@
+# Static site: frontend + calendar.ics at repository root.
+[build]
+  publish = "."
+  command = "echo 'No build step — calendar.ics is committed by GitHub Actions'"
+
+[[headers]]
+  for = "/calendar.ics"
+  [headers.values]
+    Content-Type = "text/calendar; charset=utf-8"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"

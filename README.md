@@ -8,9 +8,39 @@ The calendar updates itself every month, so you subscribe once and forget about 
 
 ---
 
+## Website (Netlify)
+
+The repo includes a static frontend (`index.html`) that reads `calendar.ics` and shows today’s saints, a month grid, and subscription links.
+
+### Deploy on Netlify
+
+1. Log in at [netlify.com](https://www.netlify.com) → **Add new site** → **Import an existing project**.
+2. Connect **GitHub** → choose `romanian-orthodox-calendar`.
+3. Build settings (should auto-detect from `netlify.toml`):
+   - **Publish directory:** `.` (root)
+   - **Build command:** leave empty or use the placeholder from `netlify.toml`
+4. Deploy.
+
+Your site will be at `https://<random>.netlify.app` (or your custom domain). The calendar feed is on the same host:
+
+```text
+https://<your-site>.netlify.app/calendar.ics
+```
+
+### Preview locally
+
+```bash
+cd romanian-orthodox-calendar
+python3 -m http.server 8080
+```
+
+Open http://localhost:8080 (ES modules require a local server, not `file://`).
+
+---
+
 ## Subscribe
 
-Once GitHub Pages is enabled, the calendar feed will be available at:
+Once GitHub Pages or Netlify is live, the calendar feed will be available at:
 
 ```text
 https://<USERNAME>.github.io/<REPOSITORY>/calendar.ics
@@ -183,6 +213,11 @@ calendar.ics
 
 ```text
 romanian-orthodox-calendar/
+├── index.html          # frontend (Netlify / static host)
+├── css/style.css
+├── js/app.js
+├── js/ical-parse.js
+├── netlify.toml
 ├── scrape.py
 ├── requirements.txt
 ├── calendar.ics
