@@ -91,7 +91,7 @@ const PHRASE_RULES = [
   { re: /Duminica/gi, en: "Sunday" },
   { re: /Zi aliturgica/gi, en: "Non-liturgical day" },
   { re: /Canonul Mare/gi, en: "Great Canon" },
-  { re: /dezlegare la peste/gi, en: "dispensation for fish" },
+  { re: /dezlegare la peste/gi, en: "Fish allowed" },
   { re: /dezlegare la ulei si vin/gi, en: "dispensation for oil and wine" },
   { re: /Vindecarea demonizatului/gi, en: "Healing of the demoniac" },
   { re: /din tinutul gherghesenilor/gi, en: "from the country of the Gergesenes" },
