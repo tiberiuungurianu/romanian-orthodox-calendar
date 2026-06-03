@@ -162,28 +162,7 @@
                   </li>
                 </ul>
 
-                <div class="day-detail-slot day-detail-slot--idle" id="day-panel" aria-labelledby="day-title">
-                  <button
-                    type="button"
-                    class="day-sheet-close btn-icon glass-inset"
-                    id="day-sheet-close"
-                    hidden
-                    data-i18n-aria="day.close"
-                    aria-label="Închide detaliile zilei"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path d="M6 6l12 12M18 6L6 18"/>
-                    </svg>
-                  </button>
-                  <p class="eyebrow" data-i18n="day.eyebrow">Zi selectată</p>
-                  <h2 id="day-title" class="section-title">—</h2>
-                  <div class="day-detail-body">
-                    <div class="day-detail-body__inner" id="day-detail-inner">
-                      <p id="day-panel-empty" class="day-panel-empty muted" data-i18n="day.pick">Alege o zi din calendar.</p>
-                      <ul class="event-list day-panel-events" id="day-events" hidden></ul>
-                    </div>
-                  </div>
-                </div>
+                <div id="day-panel-anchor" class="day-panel-anchor" hidden aria-hidden="true"></div>
               </section>
             </div>
 
@@ -319,6 +298,29 @@
         <div class="cookie-banner__actions">
           <button type="button" class="btn btn--fill" id="cookie-accept" data-i18n="consent.accept">Accept toate</button>
           <button type="button" class="btn btn--glass" id="cookie-reject" data-i18n="consent.reject">Doar esențiale</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="day-detail-slot day-detail-slot--idle glass" id="day-panel" aria-labelledby="day-title">
+      <button
+        type="button"
+        class="day-sheet-close btn-icon glass-inset"
+        id="day-sheet-close"
+        hidden
+        data-i18n-aria="day.close"
+        aria-label="Închide detaliile zilei"
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18"/>
+        </svg>
+      </button>
+      <p class="eyebrow" data-i18n="day.eyebrow">Zi selectată</p>
+      <h2 id="day-title" class="section-title">—</h2>
+      <div class="day-detail-body">
+        <div class="day-detail-body__inner" id="day-detail-inner">
+          <p id="day-panel-empty" class="day-panel-empty muted" data-i18n="day.pick">Alege o zi din calendar.</p>
+          <ul class="event-list day-panel-events" id="day-events" hidden></ul>
         </div>
       </div>
     </div>

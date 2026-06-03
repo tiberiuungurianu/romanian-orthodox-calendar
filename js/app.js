@@ -42,14 +42,46 @@ let loadedEventCount = null;
 
 const $ = (sel) => document.querySelector(sel);
 
-const MOBILE_MQ = window.matchMedia("(max-width: 899px)");
+/** Touch / narrow UI — sheet on phones (incl. Pro Max landscape via coarse pointer). */
+function isMobileSheetUi() {
+  return (
+    window.matchMedia("(max-width: 1023px)").matches ||
+    window.matchMedia("(hover: none) and (pointer: coarse)").matches
+  );
+}
 
 /** Scroll position before sheet locks the page (iOS reports scrollY as 0). */
 let scrollYBeforeDaySheet = 0;
 
+/**
+ * Keep #day-panel on document.body for iOS (fixed inside .glass breaks).
+ * Dock back into the calendar card on desktop layout.
+ */
+function ensureDayPanelHost() {
+  const panel = $("#day-panel");
+  const anchor = $("#day-panel-anchor");
+  const backdrop = $("#day-sheet-backdrop");
+  if (!panel || !anchor) return;
+
+  const mobile = isMobileSheetUi();
+  if (mobile) {
+    anchor.hidden = true;
+    if (panel.parentElement !== document.body) {
+      document.body.insertBefore(panel, backdrop ?? null);
+    }
+    return;
+  }
+
+  anchor.hidden = true;
+  if (panel.parentElement !== anchor.parentElement) {
+    anchor.insertAdjacentElement("afterend", panel);
+  }
+}
+
 /** Mobile: fixed bottom sheet so day details never reflow the page. */
 function syncDaySheetUi() {
-  const open = MOBILE_MQ.matches && Boolean(selectedIso);
+  ensureDayPanelHost();
+  const open = isMobileSheetUi() && Boolean(selectedIso);
   const panel = $("#day-panel");
   const wasOpen = document.documentElement.classList.contains("day-sheet-open");
   if (open && !wasOpen) {
@@ -74,7 +106,7 @@ function syncDaySheetUi() {
     closeBtn.hidden = !open;
   }
   if (panel) {
-    if (MOBILE_MQ.matches) {
+    if (isMobileSheetUi()) {
       panel.setAttribute("aria-modal", open ? "true" : "false");
       panel.setAttribute("role", open ? "dialog" : "region");
     } else {
@@ -292,7 +324,7 @@ function renderGrid() {
       lastMonthChangeSource = "day_select";
       trackSelectDay(iso, events.length);
       updateGridSelection(prevIso, iso);
-      renderSelectedDay({ animate: MOBILE_MQ.matches });
+      renderSelectedDay({ animate: isMobileSheetUi() });
     });
     grid.appendChild(cell);
   }
@@ -473,6 +505,7 @@ function refreshUi() {
   applyStaticI18nAria();
   refreshSubscribeLinks();
   updateMetaCount();
+  ensureDayPanelHost();
   renderToday();
   renderGrid();
   renderSelectedDay();
@@ -523,19 +556,24 @@ document.addEventListener("DOMContentLoaded", () => {
   setupSubscribe();
   setupNav();
   setupDaySheet();
+  ensureDayPanelHost();
   onLanguageChange(refreshUi);
   loadCalendar();
 });
 
 function setupDaySheet() {
+  const onLayoutChange = () => ensureDayPanelHost();
+  window.addEventListener("resize", onLayoutChange, { passive: true });
+  window.addEventListener("orientationchange", onLayoutChange, { passive: true });
+
   $("#day-sheet-close")?.addEventListener("click", (e) => {
     e.preventDefault();
-    if (MOBILE_MQ.matches) clearSelectedDay();
+    if (isMobileSheetUi()) clearSelectedDay();
   });
   $("#day-sheet-backdrop")?.addEventListener("click", () => {
-    if (MOBILE_MQ.matches) clearSelectedDay();
+    if (isMobileSheetUi()) clearSelectedDay();
   });
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && MOBILE_MQ.matches && selectedIso) clearSelectedDay();
+    if (e.key === "Escape" && isMobileSheetUi() && selectedIso) clearSelectedDay();
   });
 }

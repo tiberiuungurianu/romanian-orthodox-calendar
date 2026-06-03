@@ -1033,130 +1033,6 @@ main {
     display: none;
   }
 
-  .day-sheet-backdrop {
-    position: fixed;
-    inset: 0;
-    z-index: 130;
-    margin: 0;
-    padding: 0;
-    border: 0;
-    background: rgba(12, 22, 28, 0.4);
-    opacity: 0;
-    transition: opacity 0.32s var(--hover-ease);
-    pointer-events: none;
-    cursor: default;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  html.day-sheet-open {
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
-
-  html.day-sheet-open .day-sheet-backdrop:not([hidden]) {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
-  [data-theme="dark"] .day-sheet-backdrop {
-    background: rgba(0, 0, 0, 0.55);
-  }
-
-  /* Fixed bottom sheet — out of document flow (no page jump) */
-  .day-detail-slot {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 140;
-    margin: 0;
-    padding: 0.5rem 1rem max(0.85rem, env(safe-area-inset-bottom));
-    border-top: 1px solid var(--glass-border);
-    border-radius: 20px 20px 0 0;
-    background: var(--glass-bg-strong);
-    backdrop-filter: blur(22px) saturate(1.15);
-    -webkit-backdrop-filter: blur(22px) saturate(1.15);
-    box-shadow: 0 -14px 48px rgba(28, 60, 80, 0.18);
-    max-height: min(72dvh, 560px);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    transform: translate3d(0, 105%, 0);
-    visibility: hidden;
-    pointer-events: none;
-    transition:
-      transform 0.38s var(--hover-ease),
-      visibility 0.38s;
-  }
-
-  .day-detail-slot::before {
-    content: "";
-    display: block;
-    flex-shrink: 0;
-    width: 2.5rem;
-    height: 4px;
-    margin: 0.15rem auto 0.55rem;
-    border-radius: 999px;
-    background: var(--ink-faint);
-    opacity: 0.4;
-  }
-
-  .day-detail-slot:not(.day-detail-slot--idle) {
-    transform: translate3d(0, 0, 0);
-    visibility: visible;
-    pointer-events: auto;
-  }
-
-  .day-sheet-close {
-    position: absolute;
-    top: 0.5rem;
-    right: 0.6rem;
-    z-index: 2;
-    display: inline-flex;
-    width: 2.15rem;
-    height: 2.15rem;
-    color: var(--ink-soft);
-    background: var(--btn-glass-bg);
-    border: 1px solid var(--glass-border-subtle);
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .day-sheet-close:active {
-    transform: scale(0.92);
-    color: var(--ink);
-  }
-
-  .day-detail-slot .eyebrow,
-  .day-detail-slot #day-title {
-    padding-right: 2.5rem;
-  }
-
-  .day-detail-body {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    contain: none;
-  }
-
-  .day-panel-empty:not([hidden]),
-  .day-panel-events:not([hidden]) {
-    transition: opacity 0.28s var(--hover-ease);
-  }
-
-  .day-panel-events:not([hidden]) {
-    flex: 1 1 auto;
-    max-height: none;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-  }
-
-  .day-detail-slot--enter #day-title,
-  .day-detail-slot--enter .day-panel-events:not([hidden]) {
-    animation: day-detail-enter-mobile 0.32s var(--hover-ease);
-  }
-
   .grid-cell--selected:not(.grid-cell--pad),
   .grid-cell--today.grid-cell--selected:not(.grid-cell--pad) {
     transform: none;
@@ -1893,7 +1769,138 @@ section.calendar {
   min-height: 0;
 }
 
-/* Day detail — height follows content */
+.day-panel-anchor {
+  display: none;
+}
+
+/* Day detail bottom sheet — touch + narrow; panel is on <body> for iOS Safari */
+@media (max-width: 1023px), (hover: none) and (pointer: coarse) {
+  .day-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 130;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: rgba(12, 22, 28, 0.4);
+    opacity: 0;
+    transition: opacity 0.32s var(--hover-ease);
+    pointer-events: none;
+    cursor: default;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html.day-sheet-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  html.day-sheet-open .day-sheet-backdrop:not([hidden]) {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  [data-theme="dark"] .day-sheet-backdrop {
+    background: rgba(0, 0, 0, 0.55);
+  }
+
+  .day-detail-slot {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 140;
+    margin: 0;
+    padding: 0.5rem 1rem max(0.85rem, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--glass-border);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -14px 48px rgba(28, 60, 80, 0.18);
+    max-height: min(72dvh, 560px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translate3d(0, 110%, 0);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      transform 0.38s var(--hover-ease),
+      opacity 0.32s var(--hover-ease),
+      visibility 0.32s;
+  }
+
+  .day-detail-slot::before {
+    content: "";
+    display: block;
+    flex-shrink: 0;
+    width: 2.5rem;
+    height: 4px;
+    margin: 0.15rem auto 0.55rem;
+    border-radius: 999px;
+    background: var(--ink-faint);
+    opacity: 0.4;
+  }
+
+  .day-detail-slot:not(.day-detail-slot--idle),
+  html.day-sheet-open .day-detail-slot {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .day-sheet-close {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.6rem;
+    z-index: 2;
+    display: inline-flex;
+    width: 2.15rem;
+    height: 2.15rem;
+    color: var(--ink-soft);
+    background: var(--btn-glass-bg);
+    border: 1px solid var(--glass-border-subtle);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .day-sheet-close:active {
+    transform: scale(0.92);
+    color: var(--ink);
+  }
+
+  .day-detail-slot .eyebrow,
+  .day-detail-slot #day-title {
+    padding-right: 2.5rem;
+  }
+
+  .day-detail-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    contain: none;
+  }
+
+  .day-panel-empty:not([hidden]),
+  .day-panel-events:not([hidden]) {
+    transition: opacity 0.28s var(--hover-ease);
+  }
+
+  .day-panel-events:not([hidden]) {
+    flex: 1 1 auto;
+    max-height: none;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+
+  .day-detail-slot--enter #day-title,
+  .day-detail-slot--enter .day-panel-events:not([hidden]) {
+    animation: day-detail-enter-mobile 0.32s var(--hover-ease);
+  }
+}
+
+/* Day detail — height follows content (inline in calendar on desktop) */
 .day-detail-slot {
   margin-top: 0.75rem;
   padding-top: 0.85rem;
@@ -1908,7 +1915,7 @@ section.calendar {
   display: none;
 }
 
-@media (min-width: 900px) {
+@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
   .day-sheet-backdrop {
     display: none !important;
   }
@@ -1920,13 +1927,14 @@ section.calendar {
     padding-top: 0.85rem;
     padding-left: 0;
     padding-right: 0;
-    border-radius: 0;
+    border-radius: var(--radius);
     background: transparent;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
     box-shadow: none;
     max-height: none;
     transform: none;
+    opacity: 1;
     visibility: visible;
     pointer-events: auto;
     transition: none;
