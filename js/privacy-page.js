@@ -1,5 +1,6 @@
 import { initConsent } from "./consent.js";
 import { initI18n, onLanguageChange, t } from "./i18n.js";
+import { initScrollTop } from "./scroll-top.js";
 import { initTheme } from "./theme.js";
 
 function syncPageMeta() {
@@ -11,5 +12,6 @@ function syncPageMeta() {
 initI18n();
 initTheme();
 initConsent();
+initScrollTop();
 syncPageMeta();
 onLanguageChange(syncPageMeta);

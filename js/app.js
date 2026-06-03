@@ -1,5 +1,6 @@
 import { parseIcs, indexByDate } from "./ical-parse.js";
 import { KIND_PRIORITY, dayTone, eventKind } from "./event-kind.js";
+import { formatEventSummary } from "./event-summary-en.js";
 import {
   getBadgeLabel,
   getLang,
@@ -17,6 +18,7 @@ import {
 } from "./analytics.js";
 import { initConsent } from "./consent.js";
 import { initTheme } from "./theme.js";
+import { initScrollTop } from "./scroll-top.js";
 import { updateSeo } from "./seo.js";
 
 const ICS_URL = "/calendar.ics";
@@ -40,6 +42,57 @@ let loadedEventCount = null;
 
 const $ = (sel) => document.querySelector(sel);
 
+const MOBILE_MQ = window.matchMedia("(max-width: 899px)");
+
+/** Scroll position before sheet locks the page (iOS reports scrollY as 0). */
+let scrollYBeforeDaySheet = 0;
+
+/** Mobile: fixed bottom sheet so day details never reflow the page. */
+function syncDaySheetUi() {
+  const open = MOBILE_MQ.matches && Boolean(selectedIso);
+  const panel = $("#day-panel");
+  const wasOpen = document.documentElement.classList.contains("day-sheet-open");
+  if (open && !wasOpen) {
+    scrollYBeforeDaySheet = window.scrollY;
+  }
+  document.documentElement.classList.toggle("day-sheet-open", open);
+  if (!open && scrollYBeforeDaySheet > 0) {
+    const y = scrollYBeforeDaySheet;
+    scrollYBeforeDaySheet = 0;
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: y, left: 0, behavior: "instant" });
+      document.getElementById("scroll-top")?.dispatchEvent(new Event("layout-chrome-change"));
+    });
+  }
+  const backdrop = $("#day-sheet-backdrop");
+  if (backdrop) {
+    backdrop.hidden = !open;
+    backdrop.setAttribute("aria-hidden", open ? "false" : "true");
+  }
+  const closeBtn = $("#day-sheet-close");
+  if (closeBtn) {
+    closeBtn.hidden = !open;
+  }
+  if (panel) {
+    if (MOBILE_MQ.matches) {
+      panel.setAttribute("aria-modal", open ? "true" : "false");
+      panel.setAttribute("role", open ? "dialog" : "region");
+    } else {
+      panel.removeAttribute("aria-modal");
+      panel.setAttribute("role", "region");
+    }
+  }
+  document.getElementById("scroll-top")?.dispatchEvent(new Event("layout-chrome-change"));
+}
+
+function clearSelectedDay() {
+  const prevIso = selectedIso;
+  if (!prevIso) return;
+  selectedIso = null;
+  updateGridSelection(prevIso, null);
+  renderSelectedDay();
+}
+
 function updateMetaCount() {
   const el = $("#meta-count");
   if (!el || loadedEventCount === null) return;
@@ -58,7 +111,7 @@ function renderEventItem(ev) {
   const kind = eventKind(ev.summary);
   return `<li class="event-item event-item--${kind}">
     <span class="event-badge">${getBadgeLabel(kind)}</span>
-    <span class="event-title">${escapeHtml(ev.summary)}</span>
+    <span class="event-title">${escapeHtml(formatEventSummary(ev.summary))}</span>
   </li>`;
 }
 
@@ -103,7 +156,10 @@ function renderToday() {
   list.innerHTML = events.map(renderEventItem).join("");
 }
 
-function renderSelectedDay() {
+/**
+ * @param {{ animate?: boolean }} [opts]
+ */
+function renderSelectedDay(opts = {}) {
   const panel = $("#day-panel");
   const title = $("#day-title");
   const list = $("#day-events");
@@ -111,12 +167,14 @@ function renderSelectedDay() {
   if (!panel || !title || !list || !empty) return;
 
   if (!selectedIso) {
+    panel.classList.remove("day-detail-slot--enter");
     panel.classList.add("day-detail-slot--idle");
     title.textContent = "—";
     title.className = "section-title";
     empty.hidden = false;
     list.hidden = true;
     list.innerHTML = "";
+    syncDaySheetUi();
     return;
   }
 
@@ -134,10 +192,36 @@ function renderSelectedDay() {
     events.length > 0
       ? events.map(renderEventItem).join("")
       : `<li class="event-item event-item--empty">${t("day.empty")}</li>`;
+
+  if (opts.animate) {
+    panel.classList.remove("day-detail-slot--enter");
+    void panel.offsetWidth;
+    panel.classList.add("day-detail-slot--enter");
+  }
+
+  syncDaySheetUi();
+}
+
+function updateGridSelection(prevIso, nextIso) {
+  const grid = $("#calendar-grid");
+  if (!grid) return;
+  if (prevIso) {
+    const prev = grid.querySelector(`[data-iso="${prevIso}"]`);
+    prev?.classList.remove("grid-cell--selected");
+    prev?.removeAttribute("aria-selected");
+  }
+  if (nextIso) {
+    const next = grid.querySelector(`[data-iso="${nextIso}"]`);
+    next?.classList.add("grid-cell--selected");
+    next?.setAttribute("aria-selected", "true");
+  }
 }
 
 function renderMonthLabel() {
-  $("#month-label").textContent = `${getMonthName(viewMonth)} ${viewYear}`;
+  const nameEl = $("#month-label-name");
+  const yearEl = $("#month-label-year");
+  if (nameEl) nameEl.textContent = getMonthName(viewMonth);
+  if (yearEl) yearEl.textContent = String(viewYear);
 }
 
 function daysInMonth(year, month) {
@@ -168,11 +252,16 @@ function renderGrid() {
   for (let day = 1; day <= totalDays; day++) {
     const iso = `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const events = eventsByDate.get(iso) || [];
-    const cell = document.createElement("button");
-    cell.type = "button";
+    const cell = document.createElement("div");
     cell.className = "grid-cell";
+    cell.setAttribute("role", "gridcell");
+    cell.tabIndex = -1;
+    cell.dataset.iso = iso;
     if (iso === today) cell.classList.add("grid-cell--today");
-    if (iso === selectedIso) cell.classList.add("grid-cell--selected");
+    if (iso === selectedIso) {
+      cell.classList.add("grid-cell--selected");
+      cell.setAttribute("aria-selected", "true");
+    }
     if (events.length) cell.classList.add("grid-cell--has-events");
 
     const tone = dayTone(events);
@@ -197,11 +286,13 @@ function renderGrid() {
     );
     cell.addEventListener("click", (e) => {
       e.preventDefault();
+      const prevIso = selectedIso;
+      if (prevIso === iso) return;
       selectedIso = iso;
+      lastMonthChangeSource = "day_select";
       trackSelectDay(iso, events.length);
-      renderGrid();
-      renderSelectedDay();
-      cell.blur();
+      updateGridSelection(prevIso, iso);
+      renderSelectedDay({ animate: MOBILE_MQ.matches });
     });
     grid.appendChild(cell);
   }
@@ -242,7 +333,24 @@ function currentViewIndex() {
  * @param {number} month
  * @param {string} [source]
  */
+/** @type {string} */
+let lastMonthChangeSource = "unknown";
+
+function syncMonthPickerState(matrix) {
+  const todayYm = todayIso().slice(0, 7);
+  [...matrix.children].forEach((btn, i) => {
+    const { year, month } = availableMonths[i];
+    const ym = `${year}-${String(month + 1).padStart(2, "0")}`;
+    const isActive = year === viewYear && month === viewMonth;
+    btn.classList.toggle("month-cell--active", isActive);
+    btn.classList.toggle("month-cell--current-month", ym === todayYm);
+    if (isActive) btn.setAttribute("aria-current", "true");
+    else btn.removeAttribute("aria-current");
+  });
+}
+
 function setViewMonth(year, month, source = "unknown") {
+  lastMonthChangeSource = source;
   viewYear = year;
   viewMonth = month;
   if (selectedIso) {
@@ -259,10 +367,16 @@ function setViewMonth(year, month, source = "unknown") {
 function renderMonthPicker() {
   const matrix = $("#month-matrix");
   if (!matrix) return;
-  matrix.innerHTML = "";
 
   const today = todayIso();
   const todayYm = today.slice(0, 7);
+
+  if (matrix.children.length === availableMonths.length) {
+    syncMonthPickerState(matrix);
+    return;
+  }
+
+  matrix.innerHTML = "";
 
   for (const { year, month } of availableMonths) {
     const ym = `${year}-${String(month + 1).padStart(2, "0")}`;
@@ -334,6 +448,7 @@ async function loadCalendar() {
       event_count: loadedEventCount,
       months_available: availableMonths.length,
     });
+    lastMonthChangeSource = "initial";
     trackViewMonth(viewYear, viewMonth, "initial");
   } catch (err) {
     const message = err instanceof Error ? err.message : t("error.unknown");
@@ -353,6 +468,7 @@ function syncSeo() {
 }
 
 function refreshUi() {
+  lastMonthChangeSource = "ui_refresh";
   syncSeo();
   applyStaticI18nAria();
   refreshSubscribeLinks();
@@ -360,7 +476,6 @@ function refreshUi() {
   renderToday();
   renderGrid();
   renderSelectedDay();
-  renderMonthPicker();
 }
 
 function applyStaticI18nAria() {
@@ -372,10 +487,22 @@ function applyStaticI18nAria() {
   if (grid) grid.setAttribute("aria-label", t("cal.gridLabel"));
 }
 
+function blurOnTap(el) {
+  el?.addEventListener("click", () => {
+    requestAnimationFrame(() => el.blur());
+  });
+}
+
 function setupNav() {
-  $("#prev-month").addEventListener("click", () => shiftMonth(-1));
-  $("#next-month").addEventListener("click", () => shiftMonth(1));
-  $("#go-today").addEventListener("click", () => {
+  const prev = $("#prev-month");
+  const next = $("#next-month");
+  const todayBtn = $("#go-today");
+  prev?.addEventListener("click", () => shiftMonth(-1));
+  next?.addEventListener("click", () => shiftMonth(1));
+  blurOnTap(prev);
+  blurOnTap(next);
+  blurOnTap(todayBtn);
+  todayBtn?.addEventListener("click", () => {
     const [y, m] = todayIso().split("-").map(Number);
     viewYear = y;
     viewMonth = m - 1;
@@ -391,9 +518,24 @@ document.addEventListener("DOMContentLoaded", () => {
   initI18n();
   initTheme();
   initConsent();
+  initScrollTop();
   syncSeo();
   setupSubscribe();
   setupNav();
+  setupDaySheet();
   onLanguageChange(refreshUi);
   loadCalendar();
 });
+
+function setupDaySheet() {
+  $("#day-sheet-close")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    if (MOBILE_MQ.matches) clearSelectedDay();
+  });
+  $("#day-sheet-backdrop")?.addEventListener("click", () => {
+    if (MOBILE_MQ.matches) clearSelectedDay();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && MOBILE_MQ.matches && selectedIso) clearSelectedDay();
+  });
+}

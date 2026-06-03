@@ -28,7 +28,7 @@
       })();
     </script>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta
       name="description"
       content="Politica de confidențialitate — Calendar Ortodox Românesc. Statistici anonime despre utilizare și țară."
@@ -167,6 +167,13 @@
       </main>
 
       <footer class="site-footer">
+        <p
+          class="site-footer__source"
+          data-i18n-html="footer.source"
+        >
+          Sursă:
+          <a href="https://www.crestinortodox.ro/calendar-ortodox/" target="_blank" rel="noopener">CrestinOrtodox.ro</a>
+        </p>
         <p>
           <a href="/" data-i18n="privacy.backHome">Înapoi la calendar</a>
           ·
@@ -199,6 +206,21 @@
         </div>
       </div>
     </div>
+
+    <button
+      type="button"
+      class="scroll-top"
+      id="scroll-top"
+      hidden
+      data-i18n-aria="scrollTop.aria"
+      aria-label="Înapoi sus — derulează la începutul paginii"
+    >
+      <span class="scroll-top__chevrons" aria-hidden="true">
+        <span class="scroll-top__chevron"></span>
+        <span class="scroll-top__chevron"></span>
+      </span>
+      <span class="scroll-top__label" data-i18n="scrollTop.label">Sus</span>
+    </button>
 
     <script type="module" src="/js/privacy-page.js"></script>
   </body>

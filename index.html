@@ -34,7 +34,7 @@
       })();
     </script>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta
       name="description"
       content="Calendar ortodox românesc — sărbători, sfinți și posturi. Abonează-te la feedul iCalendar."
@@ -70,7 +70,7 @@
     </div>
 
     <div class="shell">
-      <header class="site-header glass">
+      <header class="site-header glass section-block">
         <div class="brand">
           <span class="brand-icon" aria-hidden="true">☦</span>
           <div>
@@ -95,15 +95,109 @@
               <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
             </div>
           </div>
-          <p class="source">
-            <a href="https://www.crestinortodox.ro/calendar-ortodox/" target="_blank" rel="noopener">CrestinOrtodox.ro</a>
-          </p>
-          <a class="btn btn--fill btn--header" href="#abonare" data-i18n="nav.subscribe">Abonează-te</a>
         </div>
       </header>
 
+      <hr class="section-divider" aria-hidden="true" />
+
       <main>
-        <section class="subscribe glass" id="abonare" aria-labelledby="subscribe-heading">
+        <div id="loader" class="loader glass section-block">
+          <div class="spinner" aria-hidden="true"></div>
+          <p data-i18n="loader.text">Se încarcă calendarul…</p>
+        </div>
+
+        <div id="error-panel" class="error glass section-block" hidden>
+          <h2 data-i18n="error.title">Nu s-a putut încărca</h2>
+          <p id="error-message"></p>
+          <button type="button" class="btn btn--fill" onclick="location.reload()" data-i18n="error.retry">Reîncearcă</button>
+        </div>
+
+        <div id="app" hidden>
+          <p class="meta" id="meta-count"></p>
+
+          <hr class="section-divider section-divider--compact" aria-hidden="true" />
+
+          <div class="app-layout">
+            <div class="col-main">
+              <section class="today glass section-block" aria-labelledby="today-title">
+                <p class="eyebrow" data-i18n="today.eyebrow">Astăzi</p>
+                <h2 id="today-title" class="section-title">—</h2>
+                <p id="today-empty" class="muted" hidden data-i18n="today.empty">Nicio înregistrare pentru ziua de azi.</p>
+                <ul class="event-list" id="today-events"></ul>
+              </section>
+
+              <section class="calendar glass section-block" aria-labelledby="month-label">
+                <div class="cal-toolbar">
+                  <button type="button" class="btn-icon glass-inset" id="prev-month" data-i18n-aria="cal.prev" aria-label="Luna anterioară">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
+                  </button>
+                  <h2 id="month-label" class="month-label">
+                    <span class="month-label__name" id="month-label-name">—</span>
+                    <span class="month-label__year" id="month-label-year"></span>
+                  </h2>
+                  <button type="button" class="btn-icon glass-inset" id="next-month" data-i18n-aria="cal.next" aria-label="Luna următoare">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+                  </button>
+                  <button type="button" class="btn btn--glass btn--compact" id="go-today" data-i18n="cal.todayBtn">Azi</button>
+                </div>
+                <div class="calendar-grid-wrap">
+                  <div class="calendar-grid" id="calendar-grid" role="grid" data-i18n-aria="cal.gridLabel" aria-label="Calendar lunar"></div>
+                </div>
+                <ul class="legend glass-inset" data-i18n-aria="legend.label" aria-label="Semnificația culorilor">
+                  <li class="legend-item legend-item--major">
+                    <span class="dot dot--major"></span>
+                    <span data-i18n-html="legend.major"><strong>Roșu</strong> praznic mare <span class="legend-hint">Paști, Crăciun…</span></span>
+                  </li>
+                  <li class="legend-item legend-item--feast">
+                    <span class="dot dot--feast"></span>
+                    <span data-i18n-html="legend.feast"><strong>Auriu</strong> sărbătoare</span>
+                  </li>
+                  <li class="legend-item legend-item--saint">
+                    <span class="dot dot--saint"></span>
+                    <span data-i18n-html="legend.saint"><strong>Verde</strong> sfântul zilei</span>
+                  </li>
+                  <li class="legend-item legend-item--fasting">
+                    <span class="dot dot--fasting"></span>
+                    <span data-i18n-html="legend.fasting"><strong>Mov</strong> post</span>
+                  </li>
+                </ul>
+
+                <div class="day-detail-slot day-detail-slot--idle" id="day-panel" aria-labelledby="day-title">
+                  <button
+                    type="button"
+                    class="day-sheet-close btn-icon glass-inset"
+                    id="day-sheet-close"
+                    hidden
+                    data-i18n-aria="day.close"
+                    aria-label="Închide detaliile zilei"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path d="M6 6l12 12M18 6L6 18"/>
+                    </svg>
+                  </button>
+                  <p class="eyebrow" data-i18n="day.eyebrow">Zi selectată</p>
+                  <h2 id="day-title" class="section-title">—</h2>
+                  <div class="day-detail-body">
+                    <div class="day-detail-body__inner" id="day-detail-inner">
+                      <p id="day-panel-empty" class="day-panel-empty muted" data-i18n="day.pick">Alege o zi din calendar.</p>
+                      <ul class="event-list day-panel-events" id="day-events" hidden></ul>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <aside class="col-months glass section-block" data-i18n-aria="months.sidebar" aria-label="Alege luna">
+              <p class="eyebrow" data-i18n="months.eyebrow">Luni disponibile</p>
+              <p class="months-lede" data-i18n="months.lede">12 luni rulante — apasă pentru a schimba calendarul</p>
+              <div class="month-matrix" id="month-matrix" role="group"></div>
+            </aside>
+          </div>
+        </div>
+
+        <hr class="section-divider" aria-hidden="true" />
+
+        <section class="subscribe glass section-block" id="abonare" aria-labelledby="subscribe-heading">
           <p class="eyebrow" data-i18n="subscribe.eyebrow">Pentru oricine</p>
           <h2 id="subscribe-heading" data-i18n="subscribe.title">Abonează-te la calendar</h2>
           <p class="lede" data-i18n="subscribe.lede">
@@ -152,7 +246,7 @@
             <button type="button" class="btn btn--glass" id="share-feed" hidden data-i18n="subscribe.share">Distribuie linkul</button>
           </div>
 
-          <details class="subscribe-help glass-inset">
+          <details class="subscribe-help fancy">
             <summary data-i18n="subscribe.helpSummary">Cum se abonează altcineva?</summary>
             <div class="subscribe-help__body">
               <article>
@@ -174,86 +268,22 @@
             </div>
           </details>
         </section>
-
-        <div id="loader" class="loader glass">
-          <div class="spinner" aria-hidden="true"></div>
-          <p data-i18n="loader.text">Se încarcă calendarul…</p>
-        </div>
-
-        <div id="error-panel" class="error glass" hidden>
-          <h2 data-i18n="error.title">Nu s-a putut încărca</h2>
-          <p id="error-message"></p>
-          <button type="button" class="btn btn--fill" onclick="location.reload()" data-i18n="error.retry">Reîncearcă</button>
-        </div>
-
-        <div id="app" hidden>
-          <p class="meta" id="meta-count"></p>
-
-          <div class="app-layout">
-            <div class="col-main">
-              <section class="today glass" aria-labelledby="today-title">
-                <p class="eyebrow" data-i18n="today.eyebrow">Astăzi</p>
-                <h2 id="today-title" class="section-title">—</h2>
-                <p id="today-empty" class="muted" hidden data-i18n="today.empty">Nicio înregistrare pentru ziua de azi.</p>
-                <ul class="event-list" id="today-events"></ul>
-              </section>
-
-              <section class="calendar glass" aria-labelledby="month-label">
-                <div class="cal-toolbar">
-                  <button type="button" class="btn-icon glass-inset" id="prev-month" data-i18n-aria="cal.prev" aria-label="Luna anterioară">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 6l-6 6 6 6"/></svg>
-                  </button>
-                  <h2 id="month-label" class="month-label">—</h2>
-                  <button type="button" class="btn-icon glass-inset" id="next-month" data-i18n-aria="cal.next" aria-label="Luna următoare">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
-                  </button>
-                  <button type="button" class="btn btn--glass btn--compact" id="go-today" data-i18n="cal.todayBtn">Azi</button>
-                </div>
-                <div class="calendar-grid-wrap">
-                  <div class="calendar-grid" id="calendar-grid" role="grid" data-i18n-aria="cal.gridLabel" aria-label="Calendar lunar"></div>
-                </div>
-                <ul class="legend glass-inset" data-i18n-aria="legend.label" aria-label="Semnificația culorilor">
-                  <li class="legend-item legend-item--major">
-                    <span class="dot dot--major"></span>
-                    <span data-i18n-html="legend.major"><strong>Roșu</strong> praznic mare <span class="legend-hint">Paști, Crăciun…</span></span>
-                  </li>
-                  <li class="legend-item legend-item--feast">
-                    <span class="dot dot--feast"></span>
-                    <span data-i18n-html="legend.feast"><strong>Auriu</strong> sărbătoare</span>
-                  </li>
-                  <li class="legend-item legend-item--saint">
-                    <span class="dot dot--saint"></span>
-                    <span data-i18n-html="legend.saint"><strong>Verde</strong> sfântul zilei</span>
-                  </li>
-                  <li class="legend-item legend-item--fasting">
-                    <span class="dot dot--fasting"></span>
-                    <span data-i18n-html="legend.fasting"><strong>Mov</strong> post</span>
-                  </li>
-                </ul>
-
-                <div class="day-detail-slot" id="day-panel" aria-labelledby="day-title">
-                  <p class="eyebrow" data-i18n="day.eyebrow">Zi selectată</p>
-                  <h2 id="day-title" class="section-title">—</h2>
-                  <p id="day-panel-empty" class="day-panel-empty muted" data-i18n="day.pick">Alege o zi din calendar.</p>
-                  <ul class="event-list day-panel-events" id="day-events" hidden></ul>
-                </div>
-              </section>
-            </div>
-
-            <aside class="col-months glass" data-i18n-aria="months.sidebar" aria-label="Alege luna">
-              <p class="eyebrow" data-i18n="months.eyebrow">Luni disponibile</p>
-              <p class="months-lede" data-i18n="months.lede">12 luni rulante — apasă pentru a schimba calendarul</p>
-              <div class="month-matrix" id="month-matrix" role="group"></div>
-            </aside>
-          </div>
-        </div>
       </main>
+
+      <hr class="section-divider section-divider--footer" aria-hidden="true" />
 
       <div class="page-legal">
         <a href="/privacy.html" class="btn btn--glass" data-i18n="footer.privacyBtn">Politica de confidențialitate</a>
       </div>
 
       <footer class="site-footer">
+        <p
+          class="site-footer__source"
+          data-i18n-html="footer.source"
+        >
+          Sursă:
+          <a href="https://www.crestinortodox.ro/calendar-ortodox/" target="_blank" rel="noopener">CrestinOrtodox.ro</a>
+        </p>
         <p>
           <span data-i18n="footer.tag">Proiect personal</span>
           ·
@@ -292,6 +322,30 @@
         </div>
       </div>
     </div>
+
+    <button
+      type="button"
+      class="day-sheet-backdrop"
+      id="day-sheet-backdrop"
+      hidden
+      tabindex="-1"
+      aria-hidden="true"
+    ></button>
+
+    <button
+      type="button"
+      class="scroll-top"
+      id="scroll-top"
+      hidden
+      data-i18n-aria="scrollTop.aria"
+      aria-label="Înapoi sus — derulează la începutul paginii"
+    >
+      <span class="scroll-top__chevrons" aria-hidden="true">
+        <span class="scroll-top__chevron"></span>
+        <span class="scroll-top__chevron"></span>
+      </span>
+      <span class="scroll-top__label" data-i18n="scrollTop.label">Sus</span>
+    </button>
 
     <div id="toast" class="toast glass" role="status" hidden></div>
 

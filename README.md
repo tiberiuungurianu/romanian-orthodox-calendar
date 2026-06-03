@@ -36,9 +36,13 @@ python3 -m http.server 8080
 
 Open http://localhost:8080 (ES modules require a local server, not `file://`).
 
+### Design v1.1
+
+Mobile-first layout refresh: day details in a bottom sheet (no page jump), scroll-to-top control, smooth day selection, section dividers on phones, EN UI for event titles, footer source link, and subscribe block repositioned.
+
 ### Language (RO / EN)
 
-On first visit, the UI language follows the **browser / device language list**: if any preferred locale is Romanian (`ro`, `ro-RO`, `ro-MD`, …), the site opens in **Romanian**; otherwise **English**. Calendar event titles stay in Romanian (source data). Tapping **RO** or **EN** saves a choice in `localStorage` (`roc-calendar-lang`) and overrides auto-detection on later visits.
+On first visit, the UI language follows the **browser / device language list**: if any preferred locale is Romanian (`ro`, `ro-RO`, `ro-MD`, …), the site opens in **Romanian**; otherwise **English**. Event titles in the calendar grid and day panel are translated to English in the UI when **EN** is active (the iCalendar feed remains Romanian, matching the source). Tapping **RO** or **EN** saves a choice in `localStorage` (`roc-calendar-lang`) and overrides auto-detection on later visits.
 
 ---
 
