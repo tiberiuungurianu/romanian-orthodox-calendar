@@ -1,118 +1,223 @@
-# Romanian Orthodox Calendar (iCalendar)
+# Romanian Orthodox Calendar
 
-A production-ready pipeline that scrapes the [CrestinOrtodox.ro Orthodox calendar](https://www.crestinortodox.ro/calendar-ortodox/), builds a standards-compliant `.ics` file, and publishes it on **GitHub Pages** for calendar subscriptions.
+I got tired of manually adding Orthodox holidays to every calendar I use, so I built this.
 
-Subscribe once in Apple Calendar, Google Calendar, Outlook, or any iCalendar client—the feed refreshes automatically every month.
+This project scrapes the Orthodox calendar from CrestinOrtodox.ro, generates a proper `.ics` file and publishes it through GitHub Pages so it can be subscribed to from Apple Calendar, Google Calendar, Outlook or pretty much anything that supports iCalendar feeds.
 
-## Subscription URL
+The calendar updates itself every month, so you subscribe once and forget about it.
 
-After you enable GitHub Pages (see below), use:
+---
+
+## Subscribe
+
+Once GitHub Pages is enabled, the calendar feed will be available at:
 
 ```text
 https://<USERNAME>.github.io/<REPOSITORY>/calendar.ics
 ```
 
-Replace `<USERNAME>` and `<REPOSITORY>` with your GitHub account and repository name.
+Replace `<USERNAME>` and `<REPOSITORY>` with your own GitHub details.
 
-### Apple Calendar (macOS / iOS)
+### Apple Calendar
 
-1. Open **Calendar** → **File** → **New Calendar Subscription** (macOS) or **Calendars** → **Add Calendar** → **Add Subscription Calendar** (iOS).
-2. Paste the GitHub Pages URL above.
-3. Choose refresh interval **Every week** or **Every month** (the file is updated monthly on the server).
+* Open Calendar
+* Add Calendar Subscription
+* Paste the URL above
+* Set refresh interval to Weekly or Monthly
 
 ### Google Calendar
 
-1. In [Google Calendar](https://calendar.google.com), click **+** next to **Other calendars** → **From URL**.
-2. Paste the GitHub Pages URL and click **Add calendar**.
+* Open Google Calendar
+* Other Calendars → From URL
+* Paste the feed URL
+* Add Calendar
 
 ### Outlook
 
-1. Go to **Add calendar** → **Subscribe from web**.
-2. Paste the GitHub Pages URL and confirm.
+* Add Calendar
+* Subscribe from Web
+* Paste the feed URL
+
+Done.
+
+---
 
 ## How it works
 
-### Rolling 12-month window
+The website only keeps a rolling set of months available. As older months disappear, newer ones get added.
 
-The scraper does **not** use fixed years. It starts from today’s month and collects the next **12** months via `rolling_months()` (`dateutil.relativedelta`).
+For example:
 
-Example (today in June 2026): June 2026 → May 2027.
+```text
+May 2026 disappears
+May 2027 appears
+```
 
-### Scraping (`scrape.py`)
+Because of that, this project doesn't scrape fixed years.
 
-1. Builds a `requests.Session()` with browser-like headers and `urllib3` retries (`429`, `5xx`, backoff).
-2. Requests each month at `https://www.crestinortodox.ro/calendar-ortodox/{year}-{luna}/` (e.g. `2026-iunie/`).
-3. Waits **1 second** between month requests.
-4. Parses the `table.calendar-listing` rows:
-   - Saints, feasts, and liturgical titles from description cells (preferring link `title` attributes).
-   - Fasting rules from `calendar-description-rowspan` cells (`Post`, `Harti`, `Dezlegare la peste`, etc.).
-5. Logs errors and **continues** if a month fails (no crash).
-6. Deduplicates events by `(date, summary)`.
-7. Writes **`calendar.ics`** with all-day events (`DTSTART` / `DTEND`), `UID`, `SUMMARY`, and `DTSTAMP`.
+Instead it always grabs the next 12 months starting from the current month.
 
-Calendar metadata:
+Example:
 
-- **Name:** Romanian Orthodox Calendar  
-- **Description:** Source: CrestinOrtodox.ro  
+```text
+June 2026
+July 2026
+August 2026
+...
+May 2027
+```
 
-### GitHub Actions
+Every month the calendar gets rebuilt automatically with the latest data.
 
-Workflow: [`.github/workflows/update-calendar.yml`](.github/workflows/update-calendar.yml)
+---
 
-| Trigger | When |
-|--------|------|
-| `cron: "0 5 1 * *"` | 05:00 UTC on the 1st of each month |
-| `workflow_dispatch` | Manual run from the Actions tab |
+## Scraping
 
-Steps: checkout → Python 3.12 → `pip install -r requirements.txt` → `python scrape.py` → commit `calendar.ics` only if it changed → push.
+The scraper:
 
-### GitHub Pages
+* Uses a browser-like session
+* Retries failed requests
+* Waits between requests
+* Continues even if a month fails
+* Removes duplicate events
+* Preserves Romanian diacritics
+* Creates all-day calendar entries
 
-1. Push this repository to GitHub.
-2. **Settings** → **Pages** → **Build and deployment** → Source: **Deploy from a branch**.
-3. Branch: **`main`** (or your default), folder: **`/ (root)`**.
-4. Save. After a minute, `calendar.ics` is served at the subscription URL above.
+It extracts things such as:
 
-The repo includes `.nojekyll` so GitHub Pages serves the raw `.ics` file without Jekyll processing.
+* Major feasts
+* Saints
+* Orthodox holidays
+* Fasting periods
+* Food dispensations
+* Other liturgical observances
 
-## Run locally
+Everything ends up in a standard `.ics` file.
 
-Requirements: **Python 3.12**
+---
+
+## Automatic Updates
+
+GitHub Actions runs automatically on the first day of every month.
+
+```yaml
+cron: "0 5 1 * *"
+```
+
+Workflow:
+
+```text
+GitHub Action starts
+        ↓
+Scrape latest 12 months
+        ↓
+Generate calendar.ics
+        ↓
+Commit changes
+        ↓
+Push to GitHub
+        ↓
+GitHub Pages serves updated feed
+        ↓
+Your calendar refreshes automatically
+```
+
+No manual work required.
+
+---
+
+## GitHub Pages Setup
+
+1. Push the repository to GitHub
+2. Go to Settings → Pages
+3. Select "Deploy from a branch"
+4. Choose your main branch
+5. Select root (`/`)
+6. Save
+
+A few minutes later the calendar feed should be live.
+
+---
+
+## Run Locally
+
+Create a virtual environment:
 
 ```bash
 python3.12 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+```
+
+Activate it:
+
+```bash
+source .venv/bin/activate
+```
+
+Windows:
+
+```powershell
+.venv\Scripts\activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
+```
+
+Generate the calendar:
+
+```bash
 python scrape.py
 ```
 
-Output: `calendar.ics` in the project root.
+Output:
 
-## Project layout
+```text
+calendar.ics
+```
+
+---
+
+## Project Structure
 
 ```text
 romanian-orthodox-calendar/
 ├── scrape.py
 ├── requirements.txt
-├── calendar.ics          # generated; committed for Pages + first subscribe
+├── calendar.ics
 ├── README.md
 ├── .nojekyll
 └── .github/workflows/update-calendar.yml
 ```
 
+---
+
 ## Dependencies
 
-| Package | Role |
-|---------|------|
-| `requests` | HTTP client with session + retries |
-| `beautifulsoup4` | HTML parsing |
-| `python-dateutil` | `relativedelta` for rolling months |
-| `ics` | RFC 5545 calendar serialization |
+| Package         | What it's used for            |
+| --------------- | ----------------------------- |
+| requests        | Fetching pages                |
+| beautifulsoup4  | Parsing HTML                  |
+| python-dateutil | Rolling 12-month calculations |
+| ics             | Calendar generation           |
 
-## Data source & disclaimer
+---
 
-Event data is scraped from [CrestinOrtodox.ro](https://www.crestinortodox.ro/calendar-ortodox/) for personal and community use. Verify important feast and fasting dates with your parish or diocese. This project is not affiliated with CrestinOrtodox.ro.
+## Data Source
 
-## License
+All calendar information comes from:
 
-Use and modify freely; attribute CrestinOrtodox.ro as the data source when redistributing the calendar feed.
+https://www.crestinortodox.ro/calendar-ortodox/
+
+This project is not affiliated with CrestinOrtodox.ro or the Romanian Orthodox Church.
+
+If you're relying on dates for church events, fasting rules or feast days, always double-check with your local parish.
+
+---
+
+## Why?
+
+Because every year I ended up searching for the same Orthodox holidays again and manually adding them to whichever calendar I happened to be using.
+
+Now I don't have to.
