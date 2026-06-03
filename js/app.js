@@ -1,4 +1,10 @@
 import { parseIcs, indexByDate } from "./ical-parse.js";
+import {
+  KIND_PRIORITY,
+  badgeLabel,
+  dayTone,
+  eventKind,
+} from "./event-kind.js";
 
 const ICS_URL = "/calendar.ics";
 
@@ -42,30 +48,6 @@ function feedUrl() {
 
 function webcalUrl() {
   return feedUrl().replace(/^https?:/, "webcal:");
-}
-
-function eventKind(summary) {
-  const s = summary.toLowerCase();
-  if (s === "post" || s.startsWith("dezlegare") || s === "harti") return "fasting";
-  if (
-    s.includes("past") ||
-    s.includes("craciun") ||
-    s.includes("boboteaz") ||
-    s.includes("rusalii") ||
-    s.includes("inaltare") ||
-    s.includes("adormire") ||
-    s.includes("nasterea domnului") ||
-    s.includes("invieri")
-  ) {
-    return "feast";
-  }
-  return "saint";
-}
-
-function badgeLabel(kind) {
-  if (kind === "fasting") return "Post / dezlegare";
-  if (kind === "feast") return "Sărbătoare";
-  return "Sfânt";
 }
 
 function renderEventItem(ev) {
@@ -127,6 +109,9 @@ function renderSelectedDay() {
   const events = eventsByDate.get(selectedIso) || [];
   const [y, m, d] = selectedIso.split("-").map(Number);
   title.textContent = `${d} ${MONTH_NAMES[m - 1]} ${y}`;
+  title.className = "day-title";
+  const tone = dayTone(events);
+  if (tone) title.classList.add(`day-title--${tone}`);
   list.innerHTML =
     events.length > 0
       ? events.map(renderEventItem).join("")
@@ -173,10 +158,14 @@ function renderGrid() {
     if (iso === selectedIso) cell.classList.add("grid-cell--selected");
     if (events.length) cell.classList.add("grid-cell--has-events");
 
-    const kinds = new Set(events.map((e) => eventKind(e.summary)));
-    const dots = [...kinds]
-      .slice(0, 3)
-      .map((k) => `<span class="dot dot--${k}"></span>`)
+    const tone = dayTone(events);
+    if (tone) cell.classList.add(`grid-cell--tone-${tone}`);
+
+    const kindsOnDay = KIND_PRIORITY.filter((k) =>
+      events.some((e) => eventKind(e.summary) === k)
+    );
+    const dots = kindsOnDay
+      .map((k) => `<span class="dot dot--${k}" title="${badgeLabel(k)}"></span>`)
       .join("");
 
     cell.innerHTML = `<span class="day-num">${day}</span><span class="dots">${dots}</span>`;

@@ -6,9 +6,19 @@
   --gold: #b8922a;
   --gold-light: #e8d49a;
   --wine: #6b2d3c;
-  --feast: #2a4a6b;
-  --saint: #3d5c45;
-  --fasting: #6b2d3c;
+  /* At-a-glance day types */
+  --major: #b91c1c;
+  --major-bg: rgba(185, 28, 28, 0.14);
+  --major-border: rgba(185, 28, 28, 0.35);
+  --feast: #9a7420;
+  --feast-bg: rgba(184, 146, 42, 0.18);
+  --feast-border: rgba(154, 116, 32, 0.4);
+  --saint: #2d6a3e;
+  --saint-bg: rgba(45, 106, 62, 0.1);
+  --saint-border: rgba(45, 106, 62, 0.28);
+  --fasting: #5b4d8a;
+  --fasting-bg: rgba(91, 77, 138, 0.12);
+  --fasting-border: rgba(91, 77, 138, 0.3);
   --card: rgba(255, 252, 247, 0.92);
   --shadow: 0 12px 40px rgba(20, 28, 46, 0.12);
   --radius: 14px;
@@ -98,7 +108,7 @@ body {
 }
 
 .source a {
-  color: var(--feast);
+  color: var(--major);
 }
 
 main {
@@ -138,7 +148,7 @@ main {
   display: block;
   word-break: break-all;
   font-size: 0.8rem;
-  color: var(--feast);
+  color: #2a4a6b;
   margin-bottom: 1rem;
   padding: 0.65rem 0.85rem;
   background: var(--parchment-deep);
@@ -276,15 +286,47 @@ main {
   padding: 0.65rem 0.85rem;
   background: var(--parchment);
   border-radius: 10px;
-  border-left: 3px solid var(--saint);
+  border-left: 4px solid var(--saint);
+}
+
+.event-item--major {
+  border-left-color: var(--major);
+  background: var(--major-bg);
+}
+
+.event-item--major .event-title {
+  font-weight: 600;
+  color: #7f1d1d;
+}
+
+.event-item--major .event-badge {
+  background: var(--major);
+  color: #fff;
 }
 
 .event-item--feast {
   border-left-color: var(--feast);
+  background: var(--feast-bg);
+}
+
+.event-item--feast .event-badge {
+  background: var(--feast);
+  color: #fff;
+}
+
+.event-item--saint .event-badge {
+  background: var(--saint);
+  color: #fff;
 }
 
 .event-item--fasting {
   border-left-color: var(--fasting);
+  background: var(--fasting-bg);
+}
+
+.event-item--fasting .event-badge {
+  background: var(--fasting);
+  color: #fff;
 }
 
 .event-item--empty {
@@ -294,12 +336,14 @@ main {
 }
 
 .event-badge {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.04em;
   color: var(--ink-soft);
   flex-shrink: 0;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
 }
 
 .event-title {
@@ -364,6 +408,45 @@ main {
   background: var(--parchment-deep);
 }
 
+/* Day cell tone = most important event type that day */
+.grid-cell--tone-major {
+  background: var(--major-bg);
+  box-shadow: inset 0 0 0 1px var(--major-border);
+}
+
+.grid-cell--tone-major .day-num {
+  color: var(--major);
+  font-weight: 700;
+}
+
+.grid-cell--tone-feast {
+  background: var(--feast-bg);
+  box-shadow: inset 0 0 0 1px var(--feast-border);
+}
+
+.grid-cell--tone-feast .day-num {
+  color: var(--feast);
+  font-weight: 700;
+}
+
+.grid-cell--tone-saint {
+  background: var(--saint-bg);
+}
+
+.grid-cell--tone-saint .day-num {
+  color: var(--saint);
+  font-weight: 600;
+}
+
+.grid-cell--tone-fasting {
+  background: var(--fasting-bg);
+}
+
+.grid-cell--tone-fasting .day-num {
+  color: var(--fasting);
+  font-weight: 600;
+}
+
 .grid-cell--today .day-num {
   background: var(--gold);
   color: #fff;
@@ -376,10 +459,19 @@ main {
   font-weight: 600;
 }
 
+/* Today + important: ring today in gold, keep red number */
+.grid-cell--today.grid-cell--tone-major .day-num,
+.grid-cell--today.grid-cell--tone-feast .day-num {
+  box-shadow: 0 0 0 2px var(--gold-light);
+}
+
 .grid-cell--selected {
-  outline: 2px solid var(--feast);
+  outline: 2px solid var(--ink-soft);
   outline-offset: 1px;
-  background: rgba(42, 74, 107, 0.08);
+}
+
+.grid-cell--selected.grid-cell--tone-major {
+  outline-color: var(--major);
 }
 
 .grid-cell--has-events .day-num {
@@ -398,9 +490,14 @@ main {
 }
 
 .dot {
-  width: 5px;
-  height: 5px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot--major {
+  background: var(--major);
 }
 
 .dot--feast {
@@ -418,24 +515,68 @@ main {
 .legend {
   list-style: none;
   margin: 1rem 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  padding: 0.85rem 1rem;
+  display: grid;
+  gap: 0.55rem;
   font-size: 0.8rem;
-  color: var(--ink-soft);
+  color: var(--ink);
+  background: var(--parchment);
+  border-radius: 10px;
+  border: 1px solid rgba(20, 28, 46, 0.06);
 }
 
-.legend li {
+.legend-item {
   display: flex;
-  align-items: center;
-  gap: 0.35rem;
+  align-items: flex-start;
+  gap: 0.5rem;
+  line-height: 1.35;
+}
+
+.legend-item strong {
+  font-weight: 600;
+}
+
+.legend-item--major strong {
+  color: var(--major);
+}
+
+.legend-item--feast strong {
+  color: var(--feast);
+}
+
+.legend-item--saint strong {
+  color: var(--saint);
+}
+
+.legend-item--fasting strong {
+  color: var(--fasting);
+}
+
+.legend-hint {
+  color: var(--ink-soft);
+  font-weight: 400;
 }
 
 .day-title {
   margin: 0 0 0.75rem;
   font-family: var(--font-display);
   font-size: 1.35rem;
+}
+
+.day-title--major {
+  color: var(--major);
+}
+
+.day-title--feast {
+  color: var(--feast);
+}
+
+.day-title--saint {
+  color: var(--saint);
+}
+
+.day-title--fasting {
+  color: var(--fasting);
 }
 
 .site-footer {
@@ -448,7 +589,7 @@ main {
 }
 
 .site-footer a {
-  color: var(--feast);
+  color: #2a4a6b;
 }
 
 .toast {

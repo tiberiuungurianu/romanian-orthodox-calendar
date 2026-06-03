@@ -71,10 +71,23 @@
             <button type="button" class="btn btn--small" id="go-today">Azi</button>
           </div>
           <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Calendar lunar"></div>
-          <ul class="legend">
-            <li><span class="dot dot--feast"></span> Sărbătoare</li>
-            <li><span class="dot dot--saint"></span> Sfânt</li>
-            <li><span class="dot dot--fasting"></span> Post / dezlegare</li>
+          <ul class="legend" aria-label="Semnificația culorilor">
+            <li class="legend-item legend-item--major">
+              <span class="dot dot--major"></span>
+              <span><strong>Roșu</strong> — praznic mare <span class="legend-hint">(Paști, Crăciun, Rusalii…)</span></span>
+            </li>
+            <li class="legend-item legend-item--feast">
+              <span class="dot dot--feast"></span>
+              <span><strong>Auriu</strong> — sărbătoare <span class="legend-hint">(duminici de praznic, ajunuri)</span></span>
+            </li>
+            <li class="legend-item legend-item--saint">
+              <span class="dot dot--saint"></span>
+              <span><strong>Verde</strong> — sfântul zilei</span>
+            </li>
+            <li class="legend-item legend-item--fasting">
+              <span class="dot dot--fasting"></span>
+              <span><strong>Mov</strong> — post / dezlegare</span>
+            </li>
           </ul>
         </section>
 
